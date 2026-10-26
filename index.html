@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STEM Vault - بوابة ملفات STEM</title>
-  <!-- مكتبة EmailJS الرسمية -->
+  <title>STEM Vault - بوابة ملفات STEM المشتركة</title>
+
+  <!-- مكتبة EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
   <style>
     :root {
       --primary: #3b82f6;
       --primary-hover: #2563eb;
       --bg: #090d16;
-      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-bg: rgba(17, 24, 39, 0.88);
       --border: rgba(255, 255, 255, 0.08);
       --text: #f9fafb;
       --text-muted: #9ca3af;
@@ -23,7 +25,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body {
@@ -38,20 +40,14 @@
       overflow-x: hidden;
     }
 
-    /* أنيميشن الخلفية والبطاقة */
     @keyframes floatCard {
-      0% { transform: translateY(0px) scale(0.98); opacity: 0; }
-      100% { transform: translateY(0px) scale(1); opacity: 1; }
+      from { transform: translateY(12px) scale(0.98); opacity: 0; }
+      to { transform: translateY(0px) scale(1); opacity: 1; }
     }
 
     @keyframes pulseGlow {
       0%, 100% { box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.25); }
-      50% { box-shadow: 0 15px 50px -5px rgba(59, 130, 246, 0.4); }
-    }
-
-    @keyframes fadeInSlide {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
+      50% { box-shadow: 0 15px 50px -5px rgba(59, 130, 246, 0.45); }
     }
 
     .card {
@@ -62,8 +58,8 @@
       border-radius: 20px;
       padding: 32px;
       width: 100%;
-      max-width: 520px;
-      animation: floatCard 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards, pulseGlow 4s infinite ease-in-out;
+      max-width: 540px;
+      animation: floatCard 0.5s ease-out forwards, pulseGlow 4s infinite ease-in-out;
       position: relative;
     }
 
@@ -71,14 +67,12 @@
       font-weight: 800;
       margin-bottom: 8px;
       text-align: center;
-      letter-spacing: -0.5px;
     }
 
     .brand-title {
-      background: linear-gradient(135deg, #60a5fa, #a855f7);
+      background: linear-gradient(135deg, #60a5fa, #c084fc);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: fadeInSlide 0.7s ease-out;
     }
 
     p.subtitle {
@@ -86,14 +80,37 @@
       font-size: 14px;
       text-align: center;
       margin-bottom: 22px;
-      animation: fadeInSlide 0.8s ease-out;
+    }
+
+    .server-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 0 auto 18px auto;
+      display: flex;
+      width: fit-content;
+    }
+
+    .server-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
     }
 
     .auth-toggle {
       display: flex;
       border: 1px solid var(--border);
       border-radius: 12px;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       overflow: hidden;
       background: rgba(3, 7, 18, 0.6);
       padding: 4px;
@@ -111,6 +128,7 @@
       font-weight: 600;
       border: none;
       cursor: pointer;
+      box-shadow: none;
     }
 
     .auth-toggle button.active {
@@ -164,10 +182,6 @@
       box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
     }
 
-    button:active {
-      transform: translateY(1px) scale(0.98);
-    }
-
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -197,11 +211,7 @@
       width: auto;
       margin: 0;
       white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-      background: rgba(255, 255, 255, 0.05);
-      transform: translateY(-1px);
+      box-shadow: none;
     }
 
     .tab-btn.active {
@@ -224,7 +234,6 @@
       border-left: 1px solid var(--border);
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      animation: fadeInSlide 0.4s ease-out;
     }
 
     .file-item:hover {
@@ -259,7 +268,6 @@
       font-weight: bold;
       display: inline-block;
       margin-top: 5px;
-      animation: fadeInSlide 0.5s ease-out;
     }
 
     .btn-action {
@@ -301,7 +309,6 @@
       padding: 18px;
       border-radius: 14px;
       margin-top: 20px;
-      animation: fadeInSlide 0.5s ease-out;
     }
 
     .stat-grid {
@@ -320,7 +327,7 @@
     }
 
     .stat-card h4 {
-      font-size: 22px;
+      font-size: 24px;
       color: #fbbf24;
       margin-bottom: 2px;
     }
@@ -333,10 +340,15 @@
 </head>
 <body>
 
-  <!-- واجهة 1: تسجيل دخول / إنشاء حساب بكلمة المرور -->
+  <!-- واجهة 1: تسجيل دخول / إنشاء حساب -->
   <div id="step-auth" class="card">
     <h2 class="brand-title">STEM Vault</h2>
-    <p class="subtitle" id="authSubtitle">تسجيل دخول أو إنشاء حساب بكلمة مرور ورمز التحقق</p>
+    <p class="subtitle" id="authSubtitle">المنصة المشتركة لملفات STEM</p>
+
+    <div class="server-status">
+      <span class="server-dot"></span>
+      متصل بالسيرفر السحابي المباشر
+    </div>
 
     <div class="auth-toggle">
       <button id="tabRegister" class="active" onclick="switchAuthTab('register')">إنشاء حساب جديد</button>
@@ -365,7 +377,7 @@
   </div>
 
   <!-- واجهة 3: مستودع المواد وقسم الأونر -->
-  <div id="step-dashboard" class="card hidden" style="max-width: 660px;">
+  <div id="step-dashboard" class="card hidden" style="max-width: 680px;">
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
         <h3 style="text-align: right; margin: 0;">مستودع ملفات STEM</h3>
@@ -378,17 +390,17 @@
     <!-- لوحة تحكم الأونر -->
     <div id="ownerSection" class="owner-panel hidden">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: #fbbf24; font-weight: bold; font-size: 14px;">👑 لوحة تحكم المالك (Owner Control)</span>
-        <button onclick="clearAllFiles()" style="width: auto; margin: 0; padding: 6px 10px; font-size: 11px; background: #991b1b; box-shadow: none;">حذف كل الملفات</button>
+        <span style="color: #fbbf24; font-weight: bold; font-size: 14px;">👑 لوحة تحكم المالك (Live Server Counter)</span>
+        <button onclick="clearAllServerFiles()" style="width: auto; margin: 0; padding: 6px 10px; font-size: 11px; background: #991b1b; box-shadow: none;">حذف كل الملفات</button>
       </div>
       <div class="stat-grid">
         <div class="stat-card">
           <h4 id="statTotalUsers">0</h4>
-          <span>إجمالي الحسابات</span>
+          <span>إجمالي الطلاب المسجلين بالسيرفر</span>
         </div>
         <div class="stat-card">
           <h4 id="statTotalFiles">0</h4>
-          <span>إجمالي الملفات المشتركة</span>
+          <span>إجمالي الملفات المشتركة لجميع الطلاب</span>
         </div>
       </div>
     </div>
@@ -404,9 +416,9 @@
         <option value="Math">Math (الرياضيات)</option>
       </select>
 
-      <label>اختر الملف للرفع:</label>
+      <label>اختر الملف للرفع والمشاركة:</label>
       <input type="file" id="fileInput">
-      <button onclick="handleUploadFile()">رفع ومشاركة الملف 📂</button>
+      <button id="uploadBtn" onclick="handleUploadFile()">رفع ومشاركة الملف للجميع 🌐</button>
     </div>
 
     <!-- تبويبات المواد -->
@@ -419,7 +431,7 @@
       <button class="tab-btn" onclick="filterBy('Math', this)">Math</button>
     </div>
 
-    <!-- قائمة الملفات -->
+    <!-- قائمة الملفات المشتركة -->
     <div id="filesList" style="margin-top: 16px;"></div>
   </div>
 
@@ -429,6 +441,10 @@
     const TEMPLATE_ID = "template_rsook3v";
     const PUBLIC_KEY  = "1iW1iRr1jl5aiKV-5";
 
+    // المفاتيح المربوطة بسيرفر JSONBin السحابي المشترك
+    const MASTER_KEY  = "$2a$10$3lNm.s53sLxRnK/TlpYvBuDXGe0G7/mKjJqPZCpndlJOKxJqc/Uo.";
+    const BIN_ID      = "6adfa49cffd5d160538dc8ec";
+
     emailjs.init(PUBLIC_KEY);
 
     let authMode = "register";
@@ -436,6 +452,43 @@
     let currentUserEmail = "";
     let generatedOTP = null;
     let currentFilter = 'All';
+    let currentServerData = { users: [], files: [] };
+
+    // الاتصال بالسيرفر السحابي المباشر
+    async function fetchServerData() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+          headers: { "X-Master-Key": MASTER_KEY }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentServerData = data.record || { users: [], files: [] };
+          if (!Array.isArray(currentServerData.users)) currentServerData.users = [];
+          if (!Array.isArray(currentServerData.files)) currentServerData.files = [];
+          return currentServerData;
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+      return null;
+    }
+
+    async function updateServerData(newData) {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": MASTER_KEY
+          },
+          body: JSON.stringify(newData)
+        });
+        return res.ok;
+      } catch (err) {
+        console.error("Update error:", err);
+        return false;
+      }
+    }
 
     function switchAuthTab(mode) {
       authMode = mode;
@@ -457,26 +510,36 @@
       }
     }
 
-    function handleAuthSubmit(e) {
+    async function handleAuthSubmit(e) {
       e.preventDefault();
       const email = document.getElementById("userEmail").value.trim().toLowerCase();
       const pass = document.getElementById("userPassword").value;
       const btn = document.getElementById("authBtn");
 
-      let users = JSON.parse(localStorage.getItem("stem_users_db") || "{}");
+      btn.disabled = true;
+      btn.innerText = "جاري التحقق من السيرفر المشترك...";
+
+      await fetchServerData();
+      const userExists = currentServerData.users.find(u => u.email === email);
 
       if (authMode === "register") {
-        if (users[email]) {
-          alert("هذا البريد مسجل بالفعل! يمكنك الانتقال إلى خيار تسجيل الدخول.");
+        if (userExists) {
+          alert("هذا الحساب مسجل بالفعل على السيرفر! انتقل لخيار تسجيل الدخول.");
+          btn.disabled = false;
+          switchAuthTab(authMode);
           return;
         }
       } else {
-        if (!users[email]) {
-          alert("هذا البريد غير مسجل! قم بإنشاء حساب جديد أولاً.");
+        if (!userExists) {
+          alert("هذا الحساب غير مسجل! اختر إنشاء حساب جديد أولاً.");
+          btn.disabled = false;
+          switchAuthTab(authMode);
           return;
         }
-        if (users[email].password !== pass) {
+        if (userExists.password !== pass) {
           alert("كلمة المرور غير صحيحة!");
+          btn.disabled = false;
+          switchAuthTab(authMode);
           return;
         }
       }
@@ -484,7 +547,6 @@
       pendingUserData = { email, password: pass, mode: authMode };
       generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-      btn.disabled = true;
       btn.innerText = "جاري إرسال رمز الأمان...";
 
       emailjs.send(SERVICE_ID, TEMPLATE_ID, {
@@ -506,27 +568,35 @@
       });
     }
 
-    function handleVerifyOTP() {
+    async function handleVerifyOTP() {
       const entered = document.getElementById("otpInput").value.trim();
 
       if (entered === generatedOTP) {
-        let users = JSON.parse(localStorage.getItem("stem_users_db") || "{}");
         currentUserEmail = pendingUserData.email;
 
+        // تسجيل المستخدم الجديد مباشرة على السيرفر السحابي المشترك
         if (pendingUserData.mode === "register") {
-          users[currentUserEmail] = { password: pendingUserData.password };
-          localStorage.setItem("stem_users_db", JSON.stringify(users));
-          alert("تم تأكيد البريد وإنشاء الحساب بنجاح!");
-        } else {
-          alert("تم تسجيل الدخول بنجاح!");
+          await fetchServerData();
+          if (!currentServerData.users.some(u => u.email === currentUserEmail)) {
+            currentServerData.users.push({
+              email: currentUserEmail,
+              password: pendingUserData.password,
+              joinedAt: new Date().toLocaleDateString('ar-EG')
+            });
+            await updateServerData(currentServerData);
+          }
         }
 
+        alert("تم التحقق بنجاح! مرحباً بك.");
         document.getElementById("step-otp").classList.add("hidden");
         document.getElementById("step-dashboard").classList.remove("hidden");
         document.getElementById("userBadge").innerText = currentUserEmail;
 
         checkOwnerPrivileges();
-        renderFiles();
+        syncWithServer();
+
+        // فحص ومزامنة تلقائية كل 8 ثوانٍ لجلب أي مستخدم أو ملف جديد فوراً
+        setInterval(syncWithServer, 8000);
       } else {
         alert("كود التحقق غير صحيح! يرجى إعادة المحاولة.");
       }
@@ -546,23 +616,26 @@
       if (isOwner) {
         ownerBadge.innerHTML = '<span class="owner-badge">👑 المالك الرئيسي (Owner)</span>';
         ownerSec.classList.remove("hidden");
-        updateOwnerStats();
       } else {
         ownerBadge.innerHTML = '';
         ownerSec.classList.add("hidden");
       }
     }
 
-    function updateOwnerStats() {
-      const users = JSON.parse(localStorage.getItem("stem_users_db") || "{}");
-      const files = JSON.parse(localStorage.getItem("stem_shared_files") || "[]");
-      document.getElementById("statTotalUsers").innerText = Object.keys(users).length;
-      document.getElementById("statTotalFiles").innerText = files.length;
+    async function syncWithServer() {
+      await fetchServerData();
+
+      // تحديث إحصائيات الأونر مباشرة من السيرفر
+      document.getElementById("statTotalUsers").innerText = (currentServerData.users || []).length;
+      document.getElementById("statTotalFiles").innerText = (currentServerData.files || []).length;
+
+      renderFileList(currentServerData.files || []);
     }
 
-    function handleUploadFile() {
+    async function handleUploadFile() {
       const fileInput = document.getElementById("fileInput");
       const subject = document.getElementById("subjectSelect").value;
+      const btn = document.getElementById("uploadBtn");
 
       if (!fileInput.files.length) {
         alert("يرجى اختيار ملف أولاً.");
@@ -570,11 +643,18 @@
       }
 
       const file = fileInput.files[0];
-      const reader = new FileReader();
+      if (file.size > 700 * 1024) {
+        alert("حجم الملف كبير على التخزين السحابي المباشر. الحد الأقصى الموصى به هو 700KB.");
+        return;
+      }
 
-      reader.onload = function(e) {
-        const newFile = {
-          id: Date.now(),
+      btn.disabled = true;
+      btn.innerText = "جاري الرفع والمشاركة لجميع الطلاب...";
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const fileRecord = {
+          id: Date.now().toString(),
           name: file.name,
           type: file.type || "application/octet-stream",
           size: (file.size / 1024).toFixed(1) + " KB",
@@ -584,72 +664,25 @@
           dataUrl: e.target.result
         };
 
-        try {
-          let files = JSON.parse(localStorage.getItem("stem_shared_files") || "[]");
-          files.unshift(newFile);
-          localStorage.setItem("stem_shared_files", JSON.stringify(files));
-          fileInput.value = "";
-          alert("تم رفع الملف بنجاح!");
-          renderFiles();
-          if (currentUserEmail === OWNER_EMAIL.toLowerCase()) updateOwnerStats();
-        } catch (err) {
-          alert("حجم الملف كبير، جرب ملفاً أصغر.");
-        }
-      };
+        await fetchServerData();
+        currentServerData.files = currentServerData.files || [];
+        currentServerData.files.unshift(fileRecord);
+        await updateServerData(currentServerData);
 
+        alert("تم رفع الملف إلى السيرفر بنجاح! سيظهر الآن عند جميع الطلاب فوراً.");
+        btn.disabled = false;
+        btn.innerText = "رفع ومشاركة الملف للجميع 🌐";
+        fileInput.value = "";
+        syncWithServer();
+      };
       reader.readAsDataURL(file);
     }
 
-    function openFile(id) {
-      const files = JSON.parse(localStorage.getItem("stem_shared_files") || "[]");
-      const file = files.find(f => f.id === id);
-      if (!file) return;
-
-      const win = window.open();
-      if (file.type.startsWith("image/") || file.type === "application/pdf") {
-        win.document.write(`
-          <title>${file.name}</title>
-          <body style="margin:0; background:#090d16; display:flex; justify-content:center; align-items:center; min-height:100vh;">
-            <iframe src="${file.dataUrl}" style="border:none; width:100vw; height:100vh;"></iframe>
-          </body>
-        `);
-      } else {
-        const a = document.createElement("a");
-        a.href = file.dataUrl;
-        a.download = file.name;
-        a.click();
-      }
-    }
-
-    function deleteFile(id) {
-      if (!confirm("هل أنت متأكد من حذف هذا الملف؟")) return;
-      let files = JSON.parse(localStorage.getItem("stem_shared_files") || "[]");
-      files = files.filter(f => f.id !== id);
-      localStorage.setItem("stem_shared_files", JSON.stringify(files));
-      renderFiles();
-      if (currentUserEmail === OWNER_EMAIL.toLowerCase()) updateOwnerStats();
-    }
-
-    function clearAllFiles() {
-      if (!confirm("تحذير: هل أنت متأكد من مسح جميع الملفات نهائياً؟")) return;
-      localStorage.removeItem("stem_shared_files");
-      renderFiles();
-      updateOwnerStats();
-      alert("تم مسح كافة الملفات.");
-    }
-
-    function filterBy(subj, btn) {
-      currentFilter = subj;
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      renderFiles();
-    }
-
-    function renderFiles() {
-      let files = JSON.parse(localStorage.getItem("stem_shared_files") || "[]");
+    function renderFileList(allFiles) {
       const container = document.getElementById("filesList");
       const isOwner = (currentUserEmail === OWNER_EMAIL.toLowerCase());
 
+      let files = allFiles;
       if (currentFilter !== 'All') {
         files = files.filter(f => f.subject === currentFilter);
       }
@@ -669,12 +702,59 @@
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="badge">${f.subject}</span>
-              <button class="btn-action btn-view" onclick="openFile(${f.id})">فتح 👁️</button>
-              ${canDelete ? `<button class="btn-action btn-delete" onclick="deleteFile(${f.id})">حذف</button>` : ''}
+              <button class="btn-action btn-view" onclick="openFile('${f.id}')">فتح 👁️</button>
+              ${canDelete ? `<button class="btn-action btn-delete" onclick="deleteServerFile('${f.id}')">حذف</button>` : ''}
             </div>
           </div>
         `;
       }).join('');
+      window.cachedFiles = allFiles;
+    }
+
+    function openFile(id) {
+      const file = (window.cachedFiles || []).find(f => f.id == id);
+      if (!file) return;
+
+      const win = window.open();
+      if (file.type.startsWith("image/") || file.type === "application/pdf") {
+        win.document.write(`
+          <title>${file.name}</title>
+          <body style="margin:0; background:#090d16; display:flex; justify-content:center; align-items:center; min-height:100vh;">
+            <iframe src="${file.dataUrl}" style="border:none; width:100vw; height:100vh;"></iframe>
+          </body>
+        `);
+      } else {
+        const a = document.createElement("a");
+        a.href = file.dataUrl;
+        a.download = file.name;
+        a.click();
+      }
+    }
+
+    async function deleteServerFile(id) {
+      if (!confirm("هل أنت متأكد من حذف هذا الملف؟")) return;
+
+      await fetchServerData();
+      currentServerData.files = (currentServerData.files || []).filter(f => f.id != id);
+      await updateServerData(currentServerData);
+      syncWithServer();
+    }
+
+    async function clearAllServerFiles() {
+      if (!confirm("تحذير: هل أنت متأكد من مسح جميع الملفات من السيرفر نهائياً؟")) return;
+
+      await fetchServerData();
+      currentServerData.files = [];
+      await updateServerData(currentServerData);
+      syncWithServer();
+      alert("تم مسح كافة الملفات.");
+    }
+
+    function filterBy(subj, btn) {
+      currentFilter = subj;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderFileList(window.cachedFiles || []);
     }
 
     function logout() {
