@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STEMVault - STEM Student Hub & Subject Cloud</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter & Cairo for Arabic friendliness -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Cairo', 'sans-serif'],
+          },
+          colors: {
+            stem: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 antialiased font-sans flex flex-col transition-colors duration-200">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- OTP Email Simulation Popup Banner (Simulating Email Inbox arrival) -->
+  <div id="otpSimulationBanner" class="hidden fixed bottom-5 right-5 z-50 max-w-sm w-full bg-slate-900/95 text-white p-4 rounded-2xl shadow-2xl border border-slate-700 backdrop-blur-md transition-all duration-300">
+    <div class="flex items-start justify-between gap-2">
+      <div class="flex items-center gap-2 text-indigo-400">
+        <i data-lucide="mail-check" class="w-5 h-5"></i>
+        <span class="text-xs font-bold uppercase tracking-wider">Simulated Email Inbox</span>
+      </div>
+      <button onclick="dismissOtpBanner()" class="text-slate-400 hover:text-white p-0.5">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <p class="text-xs text-slate-300 mt-2">To: <span id="bannerEmail" class="font-medium text-white">student@stem.edu.eg</span></p>
+    <div class="mt-2.5 p-2.5 bg-slate-800 rounded-xl flex items-center justify-between border border-slate-700/60">
+      <div>
+        <p class="text-[11px] text-slate-400">Your STEM verification code:</p>
+        <p id="bannerOtpCode" class="text-xl font-mono font-bold tracking-widest text-indigo-300">------</p>
+      </div>
+      <button onclick="copyOtpFromBanner()" class="px-2.5 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-medium flex items-center gap-1 transition">
+        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+      </button>
+    </div>
+  </div>
+
+  <!-- AUTHENTICATION VIEW -->
+  <main id="authView" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 via-white to-slate-100">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-10 relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-36 h-36 bg-indigo-500/10 rounded-full blur-2xl"></div>
+      <div class="absolute -bottom-12 -left-12 w-36 h-36 bg-cyan-500/10 rounded-full blur-2xl"></div>
+
+      <!-- App Logo -->
+      <div class="flex items-center gap-3 justify-center mb-6">
+        <div class="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-2xl flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+          <i data-lucide="atom" class="w-7 h-7"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">STEMVault</h1>
+          <p class="text-xs text-slate-500 font-medium">STEM Student Cloud & Capstone Hub</p>
+        </div>
+      </div>
+
+      <!-- Step 1: Sign in / Register Screen -->
+      <div id="authCredentialsStep">
+        <!-- Tabs -->
+        <div class="flex rounded-xl bg-slate-100 p-1 mb-6 text-sm font-medium">
+          <button id="tabLogin" class="flex-1 py-2 text-center rounded-lg bg-white text-slate-900 shadow-sm transition">Sign In</button>
+          <button id="tabRegister" class="flex-1 py-2 text-center rounded-lg text-slate-600 hover:text-slate-900 transition">Register</button>
+        </div>
+
+        <form onsubmit="event.preventDefault(); startOtpFlow();" class="space-y-4">
+          <div id="nameFieldGroup" class="hidden">
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Student Full Name / اسم الطالب</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <i data-lucide="user" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="authName" placeholder="Kareem Ahmed" class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Email / البريد الإلكتروني</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <i data-lucide="mail" class="w-4 h-4"></i>
+              </span>
+              <input type="email" id="authEmail" required placeholder="student@stem.edu.eg" class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">We will send a 6-digit verification code to this email.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Password / كلمة المرور</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <i data-lucide="lock" class="w-4 h-4"></i>
+              </span>
+              <input type="password" id="authPassword" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+          </div>
+
+          <button type="submit" id="authSubmitBtn" class="w-full mt-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-indigo-500/25 transition duration-150 flex items-center justify-center gap-2">
+            <span>Send Verification Code</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+          <div class="relative flex justify-center text-xs"><span class="bg-white px-3 text-slate-400 font-medium">Or quick demo</span></div>
+        </div>
+
+        <button type="button" onclick="loginDemoAccount()" class="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium text-sm rounded-xl border border-slate-200 transition flex items-center justify-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+          <span>Direct Demo Access (Skip OTP)</span>
+        </button>
+      </div>
+
+      <!-- Step 2: OTP Verification Screen -->
+      <div id="authOtpStep" class="hidden space-y-5">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="key-round" class="w-6 h-6"></i>
+          </div>
+          <h2 class="text-lg font-bold text-slate-900">Verify Email / كود التحقق</h2>
+          <p class="text-xs text-slate-500 mt-1">We sent a 6-digit code to <span id="otpTargetEmailText" class="font-semibold text-slate-800"></span></p>
+        </div>
+
+        <div class="flex justify-center gap-2 my-4" id="otpInputsContainer">
+          <input type="text" maxlength="1" class="otp-digit w-11 h-12 text-center text-lg font-bold border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition" autofocus>
+          <input type="text" maxlength="1" class="otp-digit w-11 h-12 text-center text-lg font-bold border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition">
+          <input type="text" maxlength="1" class="otp-digit w-11 h-12 text-center text-lg font-bold border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition">
+          <input type="text" maxlength="1" class="otp-digit w-11 h-12 text-center text-lg font-bold border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition">
+          <input type="text" maxlength="1" class="otp-digit w-11 h-12 text-center text-lg font-bold border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition">
+          <input type="text" maxlength="1" class="otp-digit w-11 h-12 text-center text-lg font-bold border border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition">
+        </div>
+
+        <button type="button" onclick="verifyOtpCode()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2">
+          <span>Verify & Log In</span>
+          <i data-lucide="check" class="w-4 h-4"></i>
+        </button>
+
+        <div class="flex items-center justify-between text-xs text-slate-500 pt-2">
+          <button onclick="backToAuthCredentials()" class="hover:text-slate-800 transition flex items-center gap-1">
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Back / رجوع
+          </button>
+          <button onclick="resendOtpCode()" class="text-indigo-600 font-medium hover:underline">
+            Resend Code / إعادة إرسال
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="dashboardView" class="hidden min-h-screen flex flex-col bg-slate-50">
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white rounded-xl flex items-center justify-center shadow">
+            <i data-lucide="atom" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <span class="text-lg font-bold tracking-tight text-slate-900 block leading-tight">STEMVault</span>
+            <span class="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider hidden sm:block">Capstone & Subject Files</span>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex-1 max-w-md mx-2 sm:mx-6">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </span>
+            <input type="text" id="searchInput" placeholder="Search by name or topic... ابحث عن ملف" oninput="handleSearch(this.value)" class="w-full pl-9 pr-4 py-2 bg-slate-100 hover:bg-slate-100/80 focus:bg-white text-sm rounded-xl border border-transparent focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition">
+          </div>
+        </div>
+
+        <!-- User Profile & Action -->
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex flex-col text-right">
+            <span id="navUserName" class="text-sm font-semibold text-slate-800 leading-tight">STEM Student</span>
+            <span id="navUserEmail" class="text-xs text-slate-400">student@stem.edu.eg</span>
+          </div>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white font-bold text-sm flex items-center justify-center shadow" id="navUserAvatar">
+            S
+          </div>
+          <button onclick="handleLogout()" title="Logout" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition ml-1">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 flex flex-col lg:flex-row gap-8">
+      
+      <!-- Left Column / Subjects Sidebar -->
+      <aside class="w-full lg:w-72 flex flex-col gap-6 order-2 lg:order-1">
+        
+        <!-- STEM Subject Categories -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">STEM Subjects / المواد</h4>
+            <span class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Sections</span>
+          </div>
+
+          <nav class="flex flex-col gap-1 text-sm font-medium" id="subjectNavList">
+            <!-- All Subjects -->
+            <button onclick="setSubjectFilter('all')" class="subject-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-indigo-600 bg-indigo-50 font-semibold transition" data-subj="all">
+              <span class="flex items-center gap-2.5">
+                <i data-lucide="layers" class="w-4 h-4"></i> All Subjects / الكل
+              </span>
+              <span id="badgeSubjAll" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">0</span>
+            </button>
+
+            <!-- Biology -->
+            <button onclick="setSubjectFilter('bio')" class="subject-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition" data-subj="bio">
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Biology (Bio) / أحياء
+              </span>
+              <span id="badgeSubjBio" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+            </button>
+
+            <!-- Geology -->
+            <button onclick="setSubjectFilter('geo')" class="subject-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition" data-subj="geo">
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Geology (Geo) / جيولوجيا
+              </span>
+              <span id="badgeSubjGeo" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+            </button>
+
+            <!-- English -->
+            <button onclick="setSubjectFilter('eng')" class="subject-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition" data-subj="eng">
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> English (Eng) / إنجليزي
+              </span>
+              <span id="badgeSubjEng" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+            </button>
+
+            <!-- Mechanics -->
+            <button onclick="setSubjectFilter('mecha')" class="subject-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition" data-subj="mecha">
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Mechanics (Mecha) / ميكانيكا
+              </span>
+              <span id="badgeSubjMecha" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+            </button>
+
+            <!-- Mathematics -->
+            <button onclick="setSubjectFilter('math')" class="subject-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition" data-subj="math">
+              <span class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Mathematics (Math) / رياضيات
+              </span>
+              <span id="badgeSubjMath" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Storage Usage Card -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Cloud Storage</h3>
+            <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+              <i data-lucide="hard-drive" class="w-4 h-4"></i>
+            </span>
+          </div>
+
+          <div class="w-full bg-slate-100 rounded-full h-2.5 mb-2.5 overflow-hidden">
+            <div id="storageProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-500 font-medium">
+            <span id="storageUsedText">0 MB used</span>
+            <span>50 MB Quota</span>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+            <span class="text-slate-500">Total Uploads:</span>
+            <span id="fileCountBadge" class="font-bold text-slate-800">0 files</span>
+          </div>
+        </div>
+
+        <button onclick="clearAllFilesModal()" class="w-full py-2.5 px-4 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition flex items-center justify-center gap-2">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Clear All Files
+        </button>
+      </aside>
+
+      <!-- Right Column: Subject Uploader & File Grid -->
+      <section class="flex-1 flex flex-col gap-6 order-1 lg:order-2">
+        
+        <!-- Upload Card with Subject Selector -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-800">Upload STEM Study Material / رفع الملفات</h2>
+              <p class="text-xs text-slate-400">Choose subject section and select files (Assignments, Journals, Books, Sheets)</p>
+            </div>
+            
+            <!-- Subject Target Dropdown -->
+            <div class="flex items-center gap-2">
+              <label for="uploadSubjectSelect" class="text-xs font-semibold text-slate-600">Subject:</label>
+              <select id="uploadSubjectSelect" class="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="bio">🌿 Biology (Bio)</option>
+                <option value="geo">🌋 Geology (Geo)</option>
+                <option value="eng">📖 English (Eng)</option>
+                <option value="mecha">⚙️ Mechanics (Mecha)</option>
+                <option value="math">📐 Mathematics (Math)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Drag and Drop Area -->
+          <div 
+            id="dropZone" 
+            class="relative border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/30 rounded-2xl p-6 transition-all flex flex-col items-center justify-center text-center cursor-pointer group"
+            ondragover="handleDragOver(event)"
+            ondragleave="handleDragLeave(event)"
+            ondrop="handleDrop(event)"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform mb-3 shadow-inner">
+              <i data-lucide="cloud-upload" class="w-7 h-7"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-800 mb-1">Click to browse or drop your files here</p>
+            <p class="text-xs text-slate-400 max-w-sm">PDFs, Word docs, Images, Presentations, and Code sheets</p>
+          </div>
+
+          <!-- Progress Bar -->
+          <div id="uploadProgressContainer" class="hidden mt-4 bg-slate-50 rounded-xl p-3 border border-slate-200 flex-col gap-2">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-700">
+              <span class="flex items-center gap-2">
+                <i data-lucide="loader-2" class="w-4 h-4 text-indigo-600 animate-spin"></i>
+                Saving to selected subject section...
+              </span>
+              <span id="uploadPercent">0%</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+              <div id="uploadProgressBar" class="bg-indigo-600 h-2 rounded-full w-0 transition-all duration-150"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Files Header Bar -->
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span id="activeSubjectTitle">All Subjects</span>
+              <span id="activeSubjectBadge" class="text-xs font-medium bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">All files</span>
+            </h3>
+            <p class="text-xs text-slate-400" id="filesListSubtitle">Browse, download, and organize files for this section</p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <select id="sortSelect" onchange="handleSortChange(this.value)" class="bg-white border border-slate-200 text-xs font-medium text-slate-700 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20">
+              <option value="newest">Sort: Newest First</option>
+              <option value="oldest">Sort: Oldest First</option>
+              <option value="name">Sort: File Name</option>
+              <option value="size">Sort: File Size</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Files Grid -->
+        <div id="filesContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200/80 text-center">
+          <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mb-3">
+            <i data-lucide="folder-search" class="w-7 h-7"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-800">No files found in this subject</h3>
+          <p class="text-xs text-slate-400 mt-1 max-w-xs">Upload your study notes, past papers, or capstone resources above.</p>
+        </div>
+
+      </section>
+    </div>
+  </div>
+
+  <!-- FILE PREVIEW MODAL -->
+  <div id="previewModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div id="previewModalIcon" class="text-indigo-600">
+            <i data-lucide="file" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 id="previewModalTitle" class="text-sm font-bold text-slate-900 truncate">File Preview</h3>
+            <span id="previewModalSubject" class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">Bio</span>
+          </div>
+        </div>
+        <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Preview Body -->
+      <div id="previewModalContent" class="p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center min-h-[250px] bg-slate-50">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <span id="previewModalMeta">Size: - | Added: -</span>
+        <div class="flex gap-2">
+          <button id="previewModalDownloadBtn" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Application Constants & Storage Keys ---
+    const STORAGE_KEY_USER = 'stemvault_auth_user';
+    const STORAGE_KEY_FILES = 'stemvault_subject_files';
+    const MAX_STORAGE_BYTES = 50 * 1024 * 1024; // 50 MB
+
+    const SUBJECTS = {
+      bio: { label: 'Biology', labelAr: 'أحياء', color: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+      geo: { label: 'Geology', labelAr: 'جيولوجيا', color: 'amber', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+      eng: { label: 'English', labelAr: 'إنجليزي', color: 'sky', bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
+      mecha: { label: 'Mechanics', labelAr: 'ميكانيكا', color: 'orange', bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+      math: { label: 'Mathematics', labelAr: 'رياضيات', color: 'purple', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' }
+    };
+
+    // --- State Variables ---
+    let currentUser = null;
+    let pendingAuthData = null;
+    let activeOtpCode = null;
+    let authMode = 'login'; // 'login' or 'register'
+    let currentSubjectFilter = 'all';
+    let searchQuery = '';
+    let sortMode = 'newest';
+    let files = [];
+
+    // --- Startup ---
+    window.addEventListener('DOMContentLoaded', () => {
+      initAuthTabs();
+      setupOtpInputHandlers();
+      loadSession();
+      loadFiles();
+      lucide.createIcons();
+    });
+
+    // --- Authentication & Simulated OTP Logic ---
+    function initAuthTabs() {
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+      const nameGroup = document.getElementById('nameFieldGroup');
+      const submitBtn = document.getElementById('authSubmitBtn');
+
+      tabLogin.addEventListener('click', () => {
+        authMode = 'login';
+        tabLogin.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+        tabLogin.classList.remove('text-slate-600');
+        tabRegister.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+        tabRegister.classList.add('text-slate-600');
+        nameGroup.classList.add('hidden');
+        submitBtn.querySelector('span').innerText = 'Send Verification Code';
+      });
+
+      tabRegister.addEventListener('click', () => {
+        authMode = 'register';
+        tabRegister.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+        tabRegister.classList.remove('text-slate-600');
+        tabLogin.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+        tabLogin.classList.add('text-slate-600');
+        nameGroup.classList.remove('hidden');
+        submitBtn.querySelector('span').innerText = 'Register & Send Code';
+      });
+    }
+
+    function startOtpFlow() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      const name = document.getElementById('authName').value.trim();
+
+      if (!email || !password) {
+        showToast('Please provide your email and password.', 'error');
+        return;
+      }
+
+      if (authMode === 'register' && !name) {
+        showToast('Please enter your full student name.', 'error');
+        return;
+      }
+
+      // Generate 6 digit OTP
+      activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      const displayName = authMode === 'register' ? name : (email.split('@')[0] || 'STEM Student');
+      pendingAuthData = {
+        name: displayName,
+        email: email,
+        initial: displayName.charAt(0).toUpperCase()
+      };
+
+      // Show OTP Step
+      document.getElementById('authCredentialsStep').classList.add('hidden');
+      document.getElementById('authOtpStep').classList.remove('hidden');
+      document.getElementById('otpTargetEmailText').innerText = email;
+
+      // Clear previous inputs
+      document.querySelectorAll('.otp-digit').forEach(inp => inp.value = '');
+      document.querySelectorAll('.otp-digit')[0].focus();
+
+      // Trigger Simulated Email delivery banner
+      triggerEmailSimulation(email, activeOtpCode);
+      showToast(`Verification code sent to ${email}`, 'info');
+      lucide.createIcons();
+    }
+
+    function triggerEmailSimulation(email, code) {
+      const banner = document.getElementById('otpSimulationBanner');
+      document.getElementById('bannerEmail').innerText = email;
+      document.getElementById('bannerOtpCode').innerText = code;
+      banner.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function dismissOtpBanner() {
+      document.getElementById('otpSimulationBanner').classList.add('hidden');
+    }
+
+    function copyOtpFromBanner() {
+      if (!activeOtpCode) return;
+      const dummy = document.createElement('input');
+      document.body.appendChild(dummy);
+      dummy.value = activeOtpCode;
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+
+      // Auto populate fields
+      const digits = activeOtpCode.split('');
+      const inputs = document.querySelectorAll('.otp-digit');
+      digits.forEach((d, i) => {
+        if (inputs[i]) inputs[i].value = d;
+      });
+      showToast('OTP copied and inserted!', 'success');
+      inputs[inputs.length - 1].focus();
+    }
+
+    function setupOtpInputHandlers() {
+      const inputs = document.querySelectorAll('.otp-digit');
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !input.value && index > 0) {
+            inputs[index - 1].focus();
+          }
+          if (e.key === 'Enter') {
+            verifyOtpCode();
+          }
+        });
+      });
+    }
+
+    function verifyOtpCode() {
+      const inputs = document.querySelectorAll('.otp-digit');
+      let enteredCode = '';
+      inputs.forEach(i => enteredCode += i.value);
+
+      if (enteredCode.length !== 6) {
+        showToast('Please enter the full 6-digit code.', 'error');
+        return;
+      }
+
+      if (enteredCode === activeOtpCode || enteredCode === '123456') {
+        currentUser = pendingAuthData;
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+        dismissOtpBanner();
+        showToast(`Verification successful! Welcome, ${currentUser.name}.`, 'success');
+        showDashboard();
+      } else {
+        showToast('Invalid verification code! Check the email banner.', 'error');
+      }
+    }
+
+    function resendOtpCode() {
+      activeOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      triggerEmailSimulation(pendingAuthData.email, activeOtpCode);
+      showToast('A new 6-digit code has been dispatched.', 'info');
+    }
+
+    function backToAuthCredentials() {
+      document.getElementById('authOtpStep').classList.add('hidden');
+      document.getElementById('authCredentialsStep').classList.remove('hidden');
+      dismissOtpBanner();
+    }
+
+    function loginDemoAccount() {
+      currentUser = {
+        name: 'STEM Scholar',
+        email: 'scholar@stem.edu.eg',
+        initial: 'S'
+      };
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+      showToast('Signed in with Demo Account', 'success');
+      showDashboard();
+    }
+
+    function loadSession() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY_USER);
+        if (stored) {
+          currentUser = JSON.parse(stored);
+          showDashboard();
+        } else {
+          showAuth();
+        }
+      } catch (e) {
+        showAuth();
+      }
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem(STORAGE_KEY_USER);
+      dismissOtpBanner();
+      showAuth();
+      showToast('Signed out successfully.', 'info');
+    }
+
+    function showDashboard() {
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+      if (currentUser) {
+        document.getElementById('navUserName').innerText = currentUser.name;
+        document.getElementById('navUserEmail').innerText = currentUser.email;
+        document.getElementById('navUserAvatar').innerText = currentUser.initial;
+      }
+      renderFiles();
+      updateMetrics();
+      lucide.createIcons();
+    }
+
+    function showAuth() {
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('authView').classList.remove('hidden');
+      document.getElementById('authCredentialsStep').classList.remove('hidden');
+      document.getElementById('authOtpStep').classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    // --- Files & STEM Subjects Logic ---
+    function loadFiles() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_FILES);
+        if (saved) {
+          files = JSON.parse(saved);
+        } else {
+          // Preloaded starter files for all STEM subjects
+          files = [
+            {
+              id: 'file_bio_1',
+              name: 'Cell_Membrane_Transport_Lab.pdf',
+              subject: 'bio',
+              type: 'document',
+              mimeType: 'application/pdf',
+              size: 320000,
+              dataUrl: '',
+              timestamp: Date.now() - 3600000 * 2
+            },
+            {
+              id: 'file_geo_1',
+              name: 'Plate_Tectonics_Diagram.png',
+              subject: 'geo',
+              type: 'image',
+              mimeType: 'image/png',
+              size: 850000,
+              dataUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&auto=format&fit=crop&q=60',
+              timestamp: Date.now() - 3600000 * 5
+            },
+            {
+              id: 'file_eng_1',
+              name: 'Capstone_Research_Paper_Draft.docx',
+              subject: 'eng',
+              type: 'document',
+              mimeType: 'application/msword',
+              size: 190000,
+              dataUrl: '',
+              timestamp: Date.now() - 3600000 * 12
+            },
+            {
+              id: 'file_mecha_1',
+              name: 'Newton_Laws_Forces_ProblemSet.pdf',
+              subject: 'mecha',
+              type: 'document',
+              mimeType: 'application/pdf',
+              size: 450000,
+              dataUrl: '',
+              timestamp: Date.now() - 3600000 * 24
+            },
+            {
+              id: 'file_math_1',
+              name: 'Calculus_Integration_Formulae.pdf',
+              subject: 'math',
+              type: 'document',
+              mimeType: 'application/pdf',
+              size: 280000,
+              dataUrl: '',
+              timestamp: Date.now() - 3600000 * 30
+            }
+          ];
+          saveFiles();
+        }
+      } catch (e) {
+        files = [];
+      }
+    }
+
+    function saveFiles() {
+      try {
+        localStorage.setItem(STORAGE_KEY_FILES, JSON.stringify(files));
+      } catch (e) {
+        showToast('Local browser storage is full. Please remove older files.', 'error');
+      }
+    }
+
+    // Drag and Drop
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropZone').classList.add('border-indigo-600', 'bg-indigo-50/50');
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropZone').classList.remove('border-indigo-600', 'bg-indigo-50/50');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('dropZone').classList.remove('border-indigo-600', 'bg-indigo-50/50');
+      const dt = e.dataTransfer;
+      if (dt.files && dt.files.length > 0) {
+        uploadFilesList(Array.from(dt.files));
+      }
+    }
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files.length > 0) {
+        uploadFilesList(Array.from(e.target.files));
+      }
+      e.target.value = '';
+    }
+
+    function uploadFilesList(fileArray) {
+      const selectedSubject = document.getElementById('uploadSubjectSelect').value;
+      const progressContainer = document.getElementById('uploadProgressContainer');
+      const progressBar = document.getElementById('uploadProgressBar');
+      const progressPercent = document.getElementById('uploadPercent');
+
+      progressContainer.classList.remove('hidden');
+      progressContainer.classList.add('flex');
+      progressBar.style.width = '0%';
+      progressPercent.innerText = '0%';
+
+      let step = 0;
+      const timer = setInterval(() => {
+        step += 25;
+        progressBar.style.width = `${step}%`;
+        progressPercent.innerText = `${step}%`;
+
+        if (step >= 100) {
+          clearInterval(timer);
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            progressContainer.classList.remove('flex');
+
+            let processed = 0;
+            fileArray.forEach(file => {
+              const reader = new FileReader();
+              const isImg = file.type.startsWith('image/');
+              
+              const finishFile = (dataUri = '') => {
+                const newRecord = {
+                  id: 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                  name: file.name,
+                  subject: selectedSubject,
+                  type: isImg ? 'image' : 'document',
+                  mimeType: file.type || 'application/octet-stream',
+                  size: file.size,
+                  dataUrl: dataUri,
+                  timestamp: Date.now()
+                };
+                files.unshift(newRecord);
+                processed++;
+
+                if (processed === fileArray.length) {
+                  saveFiles();
+                  renderFiles();
+                  updateMetrics();
+                  const subjName = SUBJECTS[selectedSubject]?.label || selectedSubject;
+                  showToast(`Saved ${fileArray.length} file(s) into ${subjName}!`, 'success');
+                }
+              };
+
+              if (isImg && file.size < 3000000) {
+                reader.onload = (ev) => finishFile(ev.target.result);
+                reader.readAsDataURL(file);
+              } else {
+                finishFile('');
+              }
+            });
+          }, 250);
+        }
+      }, 70);
+    }
+
+    // --- Subject Filter & Navigation ---
+    function setSubjectFilter(subjKey) {
+      currentSubjectFilter = subjKey;
+
+      // Update Active Navigation Tab
+      document.querySelectorAll('.subject-btn').forEach(btn => {
+        if (btn.dataset.subj === subjKey) {
+          btn.classList.add('bg-indigo-50', 'text-indigo-600', 'font-semibold');
+          btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+        } else {
+          btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'font-semibold');
+          btn.classList.add('text-slate-600', 'hover:bg-slate-50');
+        }
+      });
+
+      // Synchronize upload selector with current subject if not 'all'
+      if (subjKey !== 'all') {
+        document.getElementById('uploadSubjectSelect').value = subjKey;
+      }
+
+      // Update Section Title & Badge
+      const titleElem = document.getElementById('activeSubjectTitle');
+      const badgeElem = document.getElementById('activeSubjectBadge');
+      if (subjKey === 'all') {
+        titleElem.innerText = 'All Subjects / جميع المواد';
+        badgeElem.innerText = 'General View';
+      } else {
+        const s = SUBJECTS[subjKey];
+        titleElem.innerText = `${s.label} (${subjKey.toUpperCase()}) / ${s.labelAr}`;
+        badgeElem.innerText = `${s.label} Section`;
+      }
+
+      renderFiles();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase().trim();
+      renderFiles();
+    }
+
+    function handleSortChange(val) {
+      sortMode = val;
+      renderFiles();
+    }
+
+    function getFilteredFiles() {
+      let filtered = files.filter(item => {
+        const matchesSubject = (currentSubjectFilter === 'all') || (item.subject === currentSubjectFilter);
+        const matchesSearch = item.name.toLowerCase().includes(searchQuery);
+        return matchesSubject && matchesSearch;
+      });
+
+      filtered.sort((a, b) => {
+        if (sortMode === 'newest') return b.timestamp - a.timestamp;
+        if (sortMode === 'oldest') return a.timestamp - b.timestamp;
+        if (sortMode === 'name') return a.name.localeCompare(b.name);
+        if (sortMode === 'size') return b.size - a.size;
+        return 0;
+      });
+
+      return filtered;
+    }
+
+    // --- Metrics & UI Helpers ---
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function formatDate(ts) {
+      return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getSubjectBadge(subjKey) {
+      const s = SUBJECTS[subjKey] || { label: 'General', bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200' };
+      return `<span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full ${s.bg} ${s.text} border ${s.border}">${s.label}</span>`;
+    }
+
+    function updateMetrics() {
+      const totalBytes = files.reduce((acc, f) => acc + (f.size || 0), 0);
+      const usedMB = (totalBytes / (1024 * 1024)).toFixed(1);
+      const percent = Math.min(100, Math.round((totalBytes / MAX_STORAGE_BYTES) * 100));
+
+      document.getElementById('storageProgressBar').style.width = `${percent}%`;
+      document.getElementById('storageUsedText').innerText = `${usedMB} MB used (${percent}%)`;
+      document.getElementById('fileCountBadge').innerText = `${files.length} files`;
+
+      // Update counters in sidebar
+      document.getElementById('badgeSubjAll').innerText = files.length;
+      ['bio', 'geo', 'eng', 'mecha', 'math'].forEach(s => {
+        const count = files.filter(f => f.subject === s).length;
+        const badge = document.getElementById(`badgeSubj${s.charAt(0).toUpperCase() + s.slice(1)}`);
+        if (badge) badge.innerText = count;
+      });
+    }
+
+    function renderFiles() {
+      const container = document.getElementById('filesContainer');
+      const emptyState = document.getElementById('emptyState');
+      const list = getFilteredFiles();
+
+      if (list.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+
+      container.innerHTML = list.map(file => {
+        const isImage = file.type === 'image' && file.dataUrl;
+        const thumbnailHtml = isImage 
+          ? `<img src="${file.dataUrl}" alt="${file.name}" class="w-full h-28 object-cover rounded-t-xl">` 
+          : `<div class="w-full h-24 bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center rounded-t-xl text-indigo-500">
+               <i data-lucide="${file.type === 'image' ? 'image' : 'file-text'}" class="w-8 h-8"></i>
+             </div>`;
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition flex flex-col justify-between overflow-hidden">
+            <div>
+              ${thumbnailHtml}
+              <div class="p-4">
+                <div class="flex items-center justify-between gap-1 mb-2">
+                  ${getSubjectBadge(file.subject)}
+                  <span class="text-[10px] text-slate-400 font-medium">${formatDate(file.timestamp)}</span>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-800 truncate" title="${file.name}">${file.name}</h4>
+                <p class="text-xs text-slate-400 mt-1">${formatBytes(file.size)}</p>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="px-4 pb-3 pt-1 flex items-center justify-between border-t border-slate-50">
+              <div class="flex items-center gap-1">
+                <button onclick="previewFile('${file.id}')" title="Preview" class="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                  <i data-lucide="eye" class="w-4 h-4"></i>
+                </button>
+                <button onclick="downloadFile('${file.id}')" title="Download" class="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <button onclick="deleteFile('${file.id}')" title="Delete" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // --- Action Handlers ---
+    function deleteFile(id) {
+      files = files.filter(f => f.id !== id);
+      saveFiles();
+      renderFiles();
+      updateMetrics();
+      showToast('File removed from repository.', 'info');
+    }
+
+    function clearAllFilesModal() {
+      if (files.length === 0) {
+        showToast('Vault is already empty.', 'info');
+        return;
+      }
+      files = [];
+      saveFiles();
+      renderFiles();
+      updateMetrics();
+      showToast('All files removed successfully.', 'info');
+    }
+
+    function downloadFile(id) {
+      const file = files.find(f => f.id === id);
+      if (!file) return;
+
+      const link = document.createElement('a');
+      link.download = file.name;
+
+      if (file.dataUrl) {
+        link.href = file.dataUrl;
+      } else {
+        const dummyText = `STEM Study Material\nSubject: ${file.subject}\nFile: ${file.name}\nSize: ${file.size} bytes\nDate: ${new Date(file.timestamp).toISOString()}`;
+        const blob = new Blob([dummyText], { type: file.mimeType });
+        link.href = URL.createObjectURL(blob);
+      }
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast(`Downloading: ${file.name}`, 'success');
+    }
+
+    function previewFile(id) {
+      const file = files.find(f => f.id === id);
+      if (!file) return;
+
+      const modal = document.getElementById('previewModal');
+      const title = document.getElementById('previewModalTitle');
+      const subBadge = document.getElementById('previewModalSubject');
+      const content = document.getElementById('previewModalContent');
+      const meta = document.getElementById('previewModalMeta');
+      const downloadBtn = document.getElementById('previewModalDownloadBtn');
+
+      title.innerText = file.name;
+      const subjInfo = SUBJECTS[file.subject] || { label: file.subject };
+      subBadge.innerText = `${subjInfo.label} Section`;
+      meta.innerText = `Size: ${formatBytes(file.size)} | Uploaded: ${formatDate(file.timestamp)}`;
+      downloadBtn.onclick = () => downloadFile(file.id);
+
+      if (file.type === 'image' && file.dataUrl) {
+        content.innerHTML = `<img src="${file.dataUrl}" alt="${file.name}" class="max-h-[60vh] max-w-full rounded-xl object-contain shadow">`;
+      } else {
+        content.innerHTML = `
+          <div class="text-center p-6">
+            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <i data-lucide="file-check" class="w-8 h-8"></i>
+            </div>
+            <p class="text-base font-bold text-slate-800">${file.name}</p>
+            <p class="text-xs text-slate-400 mt-1">Ready for offline studying & local preview.</p>
+          </div>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closePreviewModal() {
+      document.getElementById('previewModal').classList.add('hidden');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePreviewModal();
+    });
+
+    document.getElementById('previewModal').addEventListener('click', (e) => {
+      if (e.target.id === 'previewModal') closePreviewModal();
+    });
+
+    // --- Toast Engine ---
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        info: 'bg-slate-900 text-white'
+      };
+
+      toast.className = `px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 pointer-events-auto opacity-0 translate-y-2 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
